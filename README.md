@@ -3,3 +3,5 @@ Here's a 3D points renderer I made from scratch which runs single threaded on th
 
 Try messing with the camera fov constant at the top of the file and how each cube is created/which cubes are rendered. 
 WASD movement, R and F to go directly up and down. Have fun! :)
+![Screenshot](two_cubes.png)
+![Screenshot](360_cube.png)
