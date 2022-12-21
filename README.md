@@ -9,3 +9,6 @@ Here's a filled-in and non-filled-in cube, the patterns on the filled-in cuber a
 
 Here's what it's like inside a non-filled-in cube with a 360 degree camera, looks really cool in motion.
 ![360_cube](https://user-images.githubusercontent.com/64884461/208126077-1e7b9f3f-25bd-43ad-92ae-92e386a50231.PNG)
+
+Randomized cube and color support
+![red_white_random_cubes](https://user-images.githubusercontent.com/64884461/208986667-cb2f7823-6c49-43e4-939f-ad09f774be7f.PNG)
