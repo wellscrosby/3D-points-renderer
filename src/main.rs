@@ -2,6 +2,7 @@
 
 use cgmath::{prelude::*, Euler, Point3, Vector3};
 use minifb::{Key, Window, WindowOptions};
+use rand::prelude::*;
 use std::f32::consts::PI;
 use std::time::Instant;
 
@@ -25,9 +26,15 @@ const HORIZONTAL_FOV_RAD: f32 = 0.25 * (PI * 2.0);
 // in units per second
 const MOVEMENT_SPEED: f32 = 50.0;
 
+// point and its color
+struct ColoredPoint {
+    point: Point3<f32>,
+    color: u32,
+}
+
 // rotation to be added later
 struct PointCloud {
-    points: Vec<Point3<f32>>,
+    points: Vec<ColoredPoint>,
     center: Point3<f32>,
     orientation: Euler<f32>,
 }
@@ -41,29 +48,45 @@ struct Camera {
 }
 
 fn main() {
-    // our main point cloud, try messing with the create_cube parameters
+    // Colors
+    let black = color_val_from_rgb(0, 0, 0);
+    let white = color_val_from_rgb(255, 255, 255);
+    let red = color_val_from_rgb(255, 0, 0);
+
+    // filled in point cloud, try messing with the create_cube parameters
+    // this comes at a big performance cost
     let point_cloud_cube: PointCloud = PointCloud {
-        points: create_cube(50, true),
+        points: create_cube(50, true, white),
         center: Point3::new(0.0, 0.0, 0.0),
         orientation: Euler::new(0.0, 0.0, 0.0),
     };
 
-    // our second point cloud, try messing with the create_cube parameters
+    // only border point cloud, try messing with the create_cube parameters
     let point_cloud_cube_2: PointCloud = PointCloud {
-        points: create_cube(50, false),
+        points: create_cube(50, false, white),
         center: Point3::new(0.0, 100.0, 0.0),
+        orientation: Euler::new(0.0, 0.0, 0.0),
+    };
+
+    // randomized point cloud, try messing with the create_random_cloud parameters
+    let point_cloud_random: PointCloud = PointCloud {
+        points: create_random_cloud(200.0, 1000),
+        center: Point3::new(100.0, 0.0, 0.0),
         orientation: Euler::new(0.0, 0.0, 0.0),
     };
 
     // for testing
     let point_cloud_origin: PointCloud = PointCloud {
-        points: vec![Point3::new(0.0, 0.0, 0.0)],
+        points: vec![ColoredPoint {
+            point: Point3::new(0.0, 0.0, 0.0),
+            color: white,
+        }],
         center: Point3::new(0.0, 0.0, 0.0),
         orientation: Euler::new(0.0, 0.0, 0.0),
     };
 
     // choose which objects to render
-    let rendered_objects = vec![point_cloud_cube, point_cloud_cube_2];
+    let rendered_objects = vec![point_cloud_cube_2, point_cloud_random];
 
     // create our camera
     let mut camera = Camera {
@@ -84,11 +107,6 @@ fn main() {
     .unwrap_or_else(|e| {
         panic!("{}", e);
     });
-
-    // Colors
-    let black = color_val_from_rgb(0, 0, 0);
-    let white = color_val_from_rgb(255, 255, 255);
-    let red = color_val_from_rgb(255, 0, 0);
 
     // Limit to max ~60 fps update rate
     window.limit_update_rate(Some(std::time::Duration::from_micros(16600)));
@@ -138,7 +156,7 @@ fn main() {
                 // get the position of the point on the screen
                 let (distance, angle) = point_to_position(
                     &camera,
-                    add_points(point, &point_cloud.center),
+                    add_points(&point.point, &point_cloud.center),
                     camera_dir_vec,
                     camera_plane_up,
                 );
@@ -149,7 +167,7 @@ fn main() {
 
                 // check that the point is in the window
                 if x > 0.0 && x < WIDTH_F32 && y > 0.0 && y < HEIGHT_F32 {
-                    buffer[x_y_to_index((x as usize, y as usize))] = white;
+                    buffer[x_y_to_index((x as usize, y as usize))] = point.color;
                 }
             }
         }
@@ -176,14 +194,17 @@ fn add_points(first: &Point3<f32>, second: &Point3<f32>) -> Point3<f32> {
 }
 
 // creates a vec of points in the shape of a cube, can be either filled or hollow
-// this is pretty inefficient for the non-filled in version
-fn create_cube(size: usize, fill_in: bool) -> Vec<Point3<f32>> {
-    let mut my_vec: Vec<Point3<f32>> = Vec::new();
+// this is very inefficient for the non-filled in version
+fn create_cube(size: usize, fill_in: bool, color: u32) -> Vec<ColoredPoint> {
+    let mut my_vec: Vec<ColoredPoint> = Vec::new();
     for i in 0..size {
         for j in 0..size {
             for k in 0..size {
                 if fill_in {
-                    my_vec.push(Point3::new(i as f32, j as f32, k as f32));
+                    my_vec.push(ColoredPoint {
+                        point: Point3::new(i as f32, j as f32, k as f32),
+                        color: color,
+                    });
                 } else if i == 0
                     || j == 0
                     || k == 0
@@ -191,12 +212,32 @@ fn create_cube(size: usize, fill_in: bool) -> Vec<Point3<f32>> {
                     || j == size - 1
                     || k == size - 1
                 {
-                    my_vec.push(Point3::new(i as f32, j as f32, k as f32));
+                    my_vec.push(ColoredPoint {
+                        point: Point3::new(i as f32, j as f32, k as f32),
+                        color: color,
+                    });
                 }
             }
         }
     }
 
+    my_vec
+}
+
+// creates a vec of count randomly placed points in the bounds of a cube with side length size,
+// can be either filled or hollow. All points are positive. Color is randomized
+fn create_random_cloud(size: f32, count: usize) -> Vec<ColoredPoint> {
+    let mut my_vec: Vec<ColoredPoint> = Vec::new();
+    for _ in 0..count {
+        my_vec.push(ColoredPoint {
+            point: Point3::new(
+                random::<f32>() * size,
+                random::<f32>() * size,
+                random::<f32>() * size,
+            ),
+            color: color_val_from_rgb(random::<u8>(), random::<u8>(), random::<u8>()),
+        });
+    }
     my_vec
 }
 
