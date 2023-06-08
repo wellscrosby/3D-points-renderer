@@ -4,7 +4,7 @@ Here's a 3D points renderer I made from scratch in Rust which runs single thread
 Try messing with the camera fov constant at the top of the file and how each cube is created/which cubes are rendered in main. 
 WASD movement, R and F to go directly up and down. Have fun! :)
 
-Here's a filled-in and non-filled-in cube, the patterns on the filled-in cuber are cool to see in motion, especially as you move far away.
+Here's a filled-in and non-filled-in cube, the patterns on the filled-in cube are cool to see in motion, especially as you move far away.
 ![two_cubes](https://user-images.githubusercontent.com/64884461/208126102-2be0d7c8-9827-46f0-a169-5a28868ed2f1.PNG)
 
 Here's what it's like inside a non-filled-in cube with a 360 degree camera, looks really cool in motion.
